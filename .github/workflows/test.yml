@@ -22,6 +22,7 @@
                "env" : {
                   "BWALLER_URL" : "${{ secrets.BWALLER_URL }}",
                   "DDSDDATA_GIT" : "${{ secrets.DDSDDATA_GIT }}",
+                  "DDSDRUN_BUILD_MAIN" : "${{ secrets.DDSDRUN_BUILD_MAIN }}",
                   "DDSDRUN_DOCKER_IMAGE" : "${{ secrets.DDSDRUN_DOCKER_IMAGE }}",
                   "DDSDRUN_DOCKER_IMAGE_OLD" : "${{ secrets.DDSDRUN_DOCKER_IMAGE_OLD }}",
                   "DOCKER_PASS" : "${{ secrets.DOCKER_PASS }}",

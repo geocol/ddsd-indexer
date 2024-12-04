@@ -60,8 +60,8 @@ build-mirror-image:
 	mv local/mirror-image/$(MIRROR_SET)/mirrordata \
 	ddsddata/data/mirror/$(MIRROR_SET)
 
-BUILD_MAIN = build-main-dev
-build-main: $(BUILD_MAIN)
+DDSDRUN_BUILD_MAIN ?= build-main-dev
+build-main: $(DDSDRUN_BUILD_MAIN)
 
 build-main-live:
 	cd ddsddata && ../local/ddsd/app/perl ../indexing.pl
@@ -74,6 +74,7 @@ build-main-live:
 	#
 	mv mirror ddsddata/data/mirror
 	cd ddsddata && ../local/ddsd/app/perl ../regenerate-index.pl
+	mv ddsddata/data/states ./
 build-main-dev:
 	cd ddsddata && ../local/ddsd/app/perl ../indexing.pl
 	cd ddsddata && ../local/ddsd/app/perl ../regenerate-index.pl
