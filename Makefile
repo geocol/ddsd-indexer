@@ -67,14 +67,15 @@ build-main-live:
 	cd ddsddata && ../local/ddsd/app/perl ../indexing.pl
 	rm -fr ddsddata/data/local ddsddata/data/config ddsddata/data/indexes
 	mv ddsddata/data/mirror mirror
+	mv ddsddata/data/states states
 	#
 	git config --global user.email "ci@test"
 	git config --global user.name "Auto"
 	cd ddsddata && git add data && git commit -m current && git push
 	#
 	mv mirror ddsddata/data/mirror
+	mv states ddsddata/data/states
 	cd ddsddata && ../local/ddsd/app/perl ../regenerate-index.pl
-	mv ddsddata/data/states ./
 build-main-dev:
 	cd ddsddata && ../local/ddsd/app/perl ../indexing.pl
 	cd ddsddata && ../local/ddsd/app/perl ../regenerate-index.pl
