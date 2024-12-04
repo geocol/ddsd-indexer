@@ -10,6 +10,8 @@ updatenightly:
 DOCKER_IMAGE = $${DDSDRUN_DOCKER_IMAGE}
 DOCKER_REGISTRY := $(shell echo $$DDSDRUN_DOCKER_IMAGE | awk -F/ '{print $$1}')
 
+ddsd-batch: batch
+
 batch:
 	mkdir -p local
 	# XXX
@@ -106,8 +108,6 @@ build-main-dev:
 
 build-ddsd:
 	$(CURL) -f https://raw.githubusercontent.com/geocol/ddsd/staging/bin/booter.staging | bash
-
-build-for-docker: batch
 
 test:
 
