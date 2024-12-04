@@ -6,7 +6,7 @@
       },
       
       {"run": "make ddsd-batch",
-       "secrets": ["DDSDDATA_GIT", "DDSDRUN_DOCKER_IMAGE", "DDSDRUN_DOCKER_IMAGE_OLD",
+       "secrets": ["DDSDDATA_GIT", "DDSDRUN_DOCKER_IMAGE", 
                    "DDSDRUN_BUILD_MAIN",
                    "BWALLER_URL", "DOCKER_USER", "DOCKER_PASS"]}
     ],
