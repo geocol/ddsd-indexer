@@ -12,6 +12,8 @@
     ],
     "tests": [
       "true"
-    ]
+    ],
+    "gaa": true,
+    "autobuild": true
   }
 }
