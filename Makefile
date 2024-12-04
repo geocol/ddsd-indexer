@@ -15,7 +15,8 @@ ddsd-batch: batch
 batch:
 	mkdir -p local
 	# XXX
-	-docker run -v `pwd`/local:/local --user `id --user` $(DOCKER_IMAGE) cp -R /app/data /local/ddsddata-data
+	-docker run -v `pwd`/local:/local --user `id --user` $(DOCKER_IMAGE_OLD) cp -R /app/data /local/ddsddata-data
+	#docker run -v `pwd`/local:/local --user `id --user` $(DOCKER_IMAGE)main cp -R /app/data /local/ddsddata-data
 	mkdir -p local/ddsddata-data
 	git clone $$DDSDDATA_GIT -b master ddsddata
 	rm -fr ddsddata/data 
@@ -40,8 +41,8 @@ batch:
 	ls -lR ddsddata
 	$(MAKE) -f Makefile.reindextemp
 	mv ddsddata/data/mirror ./
-	docker build -t $(DOCKER_IMAGE) .
-	docker push $(DOCKER_IMAGE)
+	docker build -t $(DOCKER_IMAGE)main .
+	docker push $(DOCKER_IMAGE)main
 	#bash -o pipefail -c '$(CURL) -sSf $$BWALLER_URL | BWALL_GROUP=docker BWALL_NAME=$$DDSDRUN_DOCKER_IMAGE bash'
 
 MIRROR_SET=...
