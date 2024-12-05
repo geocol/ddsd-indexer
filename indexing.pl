@@ -16,7 +16,7 @@ my $ThisPath = path (__FILE__)->parent;
 my $DataRootPath = $ThisPath->child ('ddsddata/data');
 my $DDSDPath = $ThisPath->child ('ddsd')->absolute;
 
-my $ThisRev = $ENV{LIVE} ? 4 : 6;
+my $ThisRev = $ENV{LIVE} ? 6 : 6;
 
 sub escape ($) {
   my $s = shift;
@@ -501,12 +501,12 @@ sub main () {
             if ($states_sets->{mirror_sets}->{$states_sets->{$key}}->{length} || 0) > $max_size;
       }
 
-      my $timeout = $ENV{LIVE} ? 60*15 : 60*1;
+      my $timeout = $ENV{LIVE} ? 60*15 : 60*3;
       my $started = time;
       my $end_time = $started + $timeout;
       my $need_stop = sub {
         if ($end_time < time) {
-          warn "indexing: Time elapsed\n";
+          warn "indexing: Time elapsed ($timeout)\n";
           return 1;
         }
         

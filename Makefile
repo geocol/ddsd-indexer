@@ -62,7 +62,7 @@ DDSDRUN_BUILD_MAIN ?= build-main-dev
 build-main: $(DDSDRUN_BUILD_MAIN)
 
 build-main-live:
-	cd ddsddata && ../local/ddsd/app/perl ../indexing.pl
+	cd ddsddata && LIVE=1 ../local/ddsd/app/perl ../indexing.pl
 	rm -fr ddsddata/data/local ddsddata/data/config ddsddata/data/indexes
 	mv ddsddata/data/mirror mirror
 	mv ddsddata/data/states states
