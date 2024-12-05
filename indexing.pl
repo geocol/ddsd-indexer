@@ -505,12 +505,18 @@ sub main () {
       my $started = time;
       my $end_time = $started + $timeout;
       my $need_stop = sub {
-        return 1 if $end_time < time;
+        if ($end_time < time) {
+          warn "indexing: Time elapsed\n";
+          return 1;
+        }
         
         for my $key (qw(
           free_set free_large_set nonfree_set nonfree_large_set
         )) {
-          return 1 if ($states_sets->{mirror_sets}->{$states_sets->{$key}}->{length} || 0) > $max_size;
+          if (($states_sets->{mirror_sets}->{$states_sets->{$key}}->{length} || 0) > $max_size) {
+            warn "indexing: Max size ($max_size) exceeded ($key)\n";
+            return 1;
+          }
         }
 
         return 0;
@@ -522,8 +528,9 @@ sub main () {
       return promised_until {
         my $item = shift @$sites;
         return 'done' unless defined $item;
-        
+
         my ($root_url, $site_type, $site_name, $opts) = @$item;
+        warn "indexing: Site |$site_type|, |$site_name|\n";
         $opts //= {};
         return run ($root_url, $site_type, $site_name, $opts, $states_sets, $need_stop)->then (sub {
           return 1 if $need_stop->();
