@@ -502,11 +502,18 @@ sub main () {
       }
 
       my $timeout = $ENV{LIVE} ? 60*15 : 60*3;
+      my $site_timeout = 60*5;
       my $started = time;
+      my $site_started = $started;
       my $end_time = $started + $timeout;
       my $need_stop = sub {
         if ($end_time < time) {
           warn "indexing: Time elapsed ($timeout)\n";
+          return 1;
+        }
+
+        if ($site_started + $site_timeout < time) {
+          warn "indexing: Site time elapsed ($site_timeout)\n";
           return 1;
         }
         
@@ -532,6 +539,7 @@ sub main () {
         my ($root_url, $site_type, $site_name, $opts) = @$item;
         warn "indexing: Site |$site_type|, |$site_name|\n";
         $opts //= {};
+        $site_started = time;
         return run ($root_url, $site_type, $site_name, $opts, $states_sets, $need_stop)->then (sub {
           return 1 if $need_stop->();
           return not 'done';
