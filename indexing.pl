@@ -361,7 +361,7 @@ sub process_remote_index ($$$$$$) {
       } @{rand_list $results}];
 
       return promised_wait_until {
-        return 'done' if $need_stop->();
+        return 'done' if $need_stop->(1);
         return 'done' unless @$results;
 
         my ($pack_name, $pack_url) = @{shift @$results};
@@ -506,13 +506,15 @@ sub main () {
       my $started = time;
       my $site_started = $started;
       my $end_time = $started + $timeout;
-      my $need_stop = sub {
+      my $need_stop = sub ($) {
+        my $in_run = $_[0];
+        
         if ($end_time < time) {
           warn "indexing: Time elapsed ($timeout)\n";
           return 1;
         }
 
-        if ($site_started + $site_timeout < time) {
+        if ($site_started + $site_timeout < time and not $in_run) {
           warn "indexing: Site time elapsed ($site_timeout)\n";
           return 1;
         }
@@ -541,7 +543,7 @@ sub main () {
         $opts //= {};
         $site_started = time;
         return run ($root_url, $site_type, $site_name, $opts, $states_sets, $need_stop)->then (sub {
-          return 1 if $need_stop->();
+          return 1 if $need_stop->(0);
           return not 'done';
         });
       };
