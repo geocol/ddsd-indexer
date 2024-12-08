@@ -40,7 +40,11 @@ sub ddsd ($@) {
     @_,
   ]);
   $cmd->wd ($args->{wd});
-  $cmd->stdout (\my $stdout);
+  my $stdout = '';
+  $cmd->stdout (sub {
+    $stdout .= $_[0];
+    warn "ddsd stdout: |$_[0]|\n";
+  });
   return $cmd->run->then (sub {
     return $cmd->wait;
   })->then (sub {
