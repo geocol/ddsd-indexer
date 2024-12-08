@@ -438,6 +438,7 @@ sub process_remote_index ($$$$$$$) {
               $key,
               "local/tmp/$key.mirrorzip.zip",
               '--json',
+              '--log-file', '-',
             ),
           ]);
         })->then (sub {
