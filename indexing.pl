@@ -447,7 +447,7 @@ sub process_remote_index ($$$$$$$) {
                                      "local/tmp/$key.mirrorzip.zip",
                                      $states_sets);
         });
-      } $results;
+      };
     })->then (sub {
       return $states_sitepacks_file->write_byte_string (perl2json_bytes $states_sitepacks);
     });
@@ -524,6 +524,16 @@ sub main () {
       $states_sets->{nonfree_large_set} = $_[0]->[6] || 'nonfree-l1';
       delete $states_sets->{changed_mirror_sets};
       delete $states_sets->{new_mirror_sets};
+
+      ## Redundant but necessary in case $max_size changes.
+      for my $key (qw(
+        free_set free_large_set nonfree_set nonfree_large_set
+      )) {
+        if (($states_sets->{mirror_sets}->{$states_sets->{$key}}->{length} || 0) > $max_size) {
+          $states_sets->{$key} =~ s{([0-9]+)$}{$1 + 1}e;
+          $states_sets->{new_mirror_sets}->{$states_sets->{$key}} = 1;
+        }
+      }
 
       my $timeout = $ENV{LIVE} ? 60*30 : 60*3;
       my $site_timeout = 60*5;
