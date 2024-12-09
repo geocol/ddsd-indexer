@@ -338,12 +338,15 @@ sub add_to_local_index ($$$$$$$$$) {
       }
       my @packref;
       for my $set (@set) {
-        my $packref = {%$ref};
+        my $packref = json_chars2perl perl2json_chars $ref;
         for my $file (@$files) {
           if (defined $file->{rev} and defined $file->{rev}->{length} and
               not $file->{type} eq 'meta') {
             $packref->{files}->{$file->{key}}->{skip} = 1
                 unless $set->{keys}->{$file->{key}};
+          }
+          if ($file->{type} eq 'meta') {
+            delete $packref->{source}->{files}->{$file->{key}}->{sha256};
           }
         }
         push @packref, $packref;
