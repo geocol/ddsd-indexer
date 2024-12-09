@@ -342,7 +342,7 @@ sub add_to_local_index ($$$$$$$$$) {
         for my $file (@$files) {
           if (defined $file->{rev} and defined $file->{rev}->{length} and
               not $file->{type} eq 'meta') {
-            $packref->{files}->{$file->{key}}->{skip} = 1
+            $packref->{source}->{files}->{$file->{key}}->{skip} = 1
                 unless $set->{keys}->{$file->{key}};
           }
           delete $packref->{source}->{files}->{$file->{key}}->{sha256};
