@@ -316,6 +316,59 @@ sub add_to_local_index ($$$$$$$$$) {
       })->then (sub {
         return $states_sitepackrefs_file->write_byte_string (perl2json_bytes $states_sitepackrefs);
       });
+    })->then (sub {
+      return if defined $mirrorzip;
+
+      my @set;
+      push @set, {size => 0, keys => {}};
+      for my $file (@$files) {
+        if (defined $file->{rev} and defined $file->{rev}->{length}) {
+          if ($file->{rev}->{length} >= 1*1024*1024*1024) {
+            push @set, {keys => {$file->{key} => 1}};
+          } else {
+            if ($set[0]->{size} + $file->{rev}->{length} >= 1*1024*1024*1024) {
+              unshift @set, {size => 0, keys => {}};
+            }
+            $set[0]->{keys}->{$file->{key}} = 1;
+          }
+        }
+      }
+      my @packref;
+      for my $set (@set) {
+        my $packref = {%$ref};
+        for my $file (@$files) {
+          if (defined $file->{rev} and defined $file->{rev}->{length}) {
+            $packref->{files}->{$file->{key}}->{skip} = 1
+                unless $set->{keys}->{$file->{key}};
+          }
+        }
+        push @packref, $packref;
+      }
+
+      my $i = 0;
+      my @name;
+      return Promise->resolve->then (sub {
+        return promised_for {
+          my $packref = shift;
+          my $name = "$site_type/$esite_name/fragment-$ref_key-".$i++.".json";
+          push @name, $name;
+          my $path = $base_path->child ("fragments/$name");
+          return Promised::File->new_from_path ($path)->write_byte_string
+              (perl2json_bytes_for_record $packref);
+        } \@packref;
+      })->then (sub {
+        my $list_path = $base_path->child ('fragments/list.json');
+        my $list_file = Promised::File->new_from_path ($list_path);
+        return $list_file->is_file->then (sub {
+          return $_[0] ? $list_file->read_byte_string : '[]';
+        })->then (sub {
+          my $list = json_bytes2perl $_[0];
+          push @$list, @name;
+          my $found = {};
+          $list = [grep { not $found->{$_}++ } sort { $a cmp $b } @$list];
+          return $list_file->write_byte_string (perl2json_bytes_for_record $list);
+        });
+      });
     });
   });
 } # add_to_local_index
