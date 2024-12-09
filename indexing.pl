@@ -143,15 +143,17 @@ sub add_to_local_index ($$$$$$$$$) {
     } else {
       $mirror_set = $states_sets->{$is_free ? 'free_set' : 'nonfree_set'};
     }
-    my $ref_key = $index_line->[2] = sha256_hex join $;,
+    my $ref_key_text = join $;,
         $ThisRev,
-        (encode_web_utf8 $shash),
-        (encode_web_utf8 $index_line->[3]->{is_free}),
+        $shash,
+        $index_line->[3]->{is_free},
         $index_line->[3]->{insecure} ? 1 : 0,
         $index_line->[3]->{broken} ? 1 : 0;
+    my $ref_key = $index_line->[2] = sha256_hex encode_web_utf8 $ref_key_text;
 
     my $summary = {};
     {
+      $summary->{ref_key_text} = $ref_key_text;
       $summary->{broken} = 1 if $index_line->[3]->{broken};
       $summary->{insecure} = 1 if $index_line->[3]->{insecure};
       $summary->{mirrorzip} = {
@@ -322,7 +324,8 @@ sub add_to_local_index ($$$$$$$$$) {
       my @set;
       push @set, {size => 0, keys => {}};
       for my $file (@$files) {
-        if (defined $file->{rev} and defined $file->{rev}->{length}) {
+        if (defined $file->{rev} and defined $file->{rev}->{length} and
+            not $file->{type} eq 'meta') {
           if ($file->{rev}->{length} >= 1*1024*1024*1024) {
             push @set, {keys => {$file->{key} => 1}};
           } else {
@@ -337,7 +340,8 @@ sub add_to_local_index ($$$$$$$$$) {
       for my $set (@set) {
         my $packref = {%$ref};
         for my $file (@$files) {
-          if (defined $file->{rev} and defined $file->{rev}->{length}) {
+          if (defined $file->{rev} and defined $file->{rev}->{length} and
+              not $file->{type} eq 'meta') {
             $packref->{files}->{$file->{key}}->{skip} = 1
                 unless $set->{keys}->{$file->{key}};
           }
