@@ -40,11 +40,7 @@ sub ddsd ($@) {
     @_,
   ]);
   $cmd->wd ($args->{wd});
-  my $stdout = '';
-  $cmd->stdout (sub {
-    $stdout .= $_[0];
-    warn "ddsd stdout: |$_[0]|\n";
-  });
+  $cmd->stdout (\my $stdout);
   return $cmd->run->then (sub {
     return $cmd->wait;
   })->then (sub {
@@ -142,7 +138,7 @@ sub add_to_local_index ($$$$$$$$$) {
     $index_line->[3]->{is_free} = $legal->{is_free} // 'unknown';
     my $is_free = $index_line->[3]->{is_free} eq 'free';
     my $mirror_set;
-    if ($mirrorzip->{length} > 10*1024*1024) {
+    if (defined $mirrorzip and $mirrorzip->{length} > 10*1024*1024) {
       $mirror_set = $states_sets->{$is_free ? 'free_large_set' : 'nonfree_large_set'};
     } else {
       $mirror_set = $states_sets->{$is_free ? 'free_set' : 'nonfree_set'};
@@ -162,7 +158,7 @@ sub add_to_local_index ($$$$$$$$$) {
         set => $mirror_set,
         length => $mirrorzip->{length},
         sha256 => $mirrorzip->{sha256},
-      };
+      } if defined $mirrorzip;
 
       $summary->{legal} = {%$legal, legal => filter_legal $legal->{legal}};
       
@@ -299,12 +295,14 @@ sub add_to_local_index ($$$$$$$$$) {
         return if $revert_only;
         
         $states_sets->{changed_mirror_sets}->{$mirror_set} = 1;
-        $states_sets->{mirror_sets}->{$mirror_set}->{length} += $mirrorzip->{length};
+        $states_sets->{mirror_sets}->{$mirror_set}->{length} += $mirrorzip->{length}
+            if defined $mirrorzip;
         return $ref_file->write_byte_string (perl2json_bytes_for_record $ref)->then (sub {
           return Promised::File->new_from_path ($summary_path)->write_byte_string (perl2json_bytes_for_record $summary);
         })->then (sub {
           return Promised::File->new_from_path ($index_path->parent)->mkpath;
         })->then (sub {
+          return unless defined $mirrorzip;
           my $file = Promised::File->new_from_path ($out_mirrorzip_path);
           return $file->remove_tree->then (sub {
             return Promised::File->new_from_path ($out_mirrorzip_path)->hardlink_from ($mirrorzip_path);
@@ -435,20 +433,31 @@ sub process_remote_index ($$$$$$$) {
               $key,
               '--json',
             ),
-            ddsd (
-              {wd => $base_path, json => 1},
-              'export',
-              'mirrorzip',
-              $key,
-              "local/tmp/$key.mirrorzip.zip",
-              '--json',
-              '--log-file', '-',
-            ),
-          ]);
+          ])->then (sub {
+            my $r = $_[0];
+
+            my $size = 0;
+            for my $x (@{$r->[0]->{jsonl}}) {
+              if (defined $x->{rev} and defined $x->{rev}->{length}) {
+                $size += $x->{rev}->{length};
+              }
+            }
+            return Promise->all ([
+              @$r,
+              $size < 10*1024*1024*1024 ? ddsd (
+                {wd => $base_path, json => 1},
+                'export',
+                'mirrorzip',
+                $key,
+                "local/tmp/$key.mirrorzip.zip",
+                '--json',
+              ) : {json => undef},
+            ]);
+          });
         })->then (sub {
           return add_to_local_index ($site_type, $site_name, $pack_name, $now,
                                      $_[0]->[0]->{jsonl}, $_[0]->[1]->{json},
-                                     $_[0]->[2]->{json},
+                                     $_[0]->[2]->{json}, # or undef
                                      "local/tmp/$key.mirrorzip.zip",
                                      $states_sets);
         });
