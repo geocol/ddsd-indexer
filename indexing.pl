@@ -284,7 +284,7 @@ sub add_to_local_index ($$$$$$$$$) {
       my $states_sitepackrefs = json_bytes2perl $_[0]->[1];
       my $revert_only = 0;
       if ($ThisRev <= ($states_siterefs->{$ref_key} || 0)) {
-        if ($ref_key eq $states_sitepackrefs->{$pack_name} // '') {
+        if ($ref_key eq ($states_sitepackrefs->{$pack_name} // '')) {
           return;
         } else {
           $revert_only = 1;
@@ -345,9 +345,7 @@ sub add_to_local_index ($$$$$$$$$) {
             $packref->{files}->{$file->{key}}->{skip} = 1
                 unless $set->{keys}->{$file->{key}};
           }
-          if ($file->{type} eq 'meta') {
-            delete $packref->{source}->{files}->{$file->{key}}->{sha256};
-          }
+          delete $packref->{source}->{files}->{$file->{key}}->{sha256};
         }
         push @packref, $packref;
       }
