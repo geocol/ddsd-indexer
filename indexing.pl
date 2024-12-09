@@ -322,7 +322,7 @@ sub add_to_local_index ($$$$$$$$$) {
       return if defined $mirrorzip;
 
       my @set;
-      push @set, {size => 0, keys => {}};
+      push @set, {size => 0, keys => {}, base => 1};
       for my $file (@$files) {
         if (defined $file->{rev} and defined $file->{rev}->{length} and
             not $file->{type} eq 'meta') {
@@ -344,8 +344,14 @@ sub add_to_local_index ($$$$$$$$$) {
               not $file->{type} eq 'meta') {
             $packref->{source}->{files}->{$file->{key}}->{skip} = 1
                 unless $set->{keys}->{$file->{key}};
+          } elsif ($file->{type} eq 'file' and
+                   (not defined $file->{rev} or
+                    not defined $file->{rev}->{length})) {
+            $packref->{source}->{files}->{$file->{key}}->{skip} = 1;
           }
-          delete $packref->{source}->{files}->{$file->{key}}->{sha256};
+        }
+        for (values %{$packref->{source}->{files}}) {
+          delete $_->{sha256};
         }
         push @packref, $packref;
       }
