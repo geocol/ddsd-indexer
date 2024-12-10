@@ -21,7 +21,7 @@ batch:
 	git clone $$DDSDDATA_GIT -b master ddsddata
 	#XXX
 	rm -fr /local/ddsddata-data/fragments
-	mv ddsddata/data/fragments /local/ddsddata-data/
+	mv ddsddata/data/fragments local/ddsddata-data/
 	#
 	rm -fr ddsddata/data 
 	mv local/ddsddata-data ddsddata/data
