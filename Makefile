@@ -20,7 +20,7 @@ batch:
 	mkdir -p local/ddsddata-data
 	git clone $$DDSDDATA_GIT -b master ddsddata
 	#XXX
-	rm -fr /local/ddsddata-data/fragments
+	rm -fr local/ddsddata-data/fragments
 	mv ddsddata/data/fragments local/ddsddata-data/
 	#
 	rm -fr ddsddata/data 
