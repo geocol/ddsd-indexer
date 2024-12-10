@@ -19,10 +19,6 @@ batch:
 	docker run -v `pwd`/local:/local --user `id --user` $(DOCKER_IMAGE)main cp -R /app/data /local/ddsddata-data
 	mkdir -p local/ddsddata-data
 	git clone $$DDSDDATA_GIT -b master ddsddata
-	#XXX
-	rm -fr local/ddsddata-data/fragments
-	mv ddsddata/data/fragments local/ddsddata-data/
-	#
 	rm -fr ddsddata/data 
 	mv local/ddsddata-data ddsddata/data
 	mkdir -p ddsddata/data/states/mirrorsets

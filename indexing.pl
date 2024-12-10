@@ -322,7 +322,7 @@ sub add_to_local_index ($$$$$$$$$) {
       return if defined $mirrorzip;
 
       my @set;
-      push @set, {size => 0, keys => {}, base => 1};
+      push @set, {size => 0, keys => {}};
       for my $file (@$files) {
         if (defined $file->{rev} and defined $file->{rev}->{length} and
             not $file->{type} eq 'meta') {
@@ -501,14 +501,16 @@ sub process_remote_index ($$$$$$$) {
             my $r = $_[0];
 
             my $size = 0;
+            my $count = 0;
             for my $x (@{$r->[0]->{jsonl}}) {
               if (defined $x->{rev} and defined $x->{rev}->{length}) {
                 $size += $x->{rev}->{length};
+                $count++ if $x->{type} eq 'file';
               }
             }
             return Promise->all ([
               @$r,
-              $size < 10*1024*1024*1024 ? ddsd (
+              ($size < 11*1024*1024*1024 || $count <= 1) ? ddsd (
                 {wd => $base_path, json => 1},
                 'export',
                 'mirrorzip',
