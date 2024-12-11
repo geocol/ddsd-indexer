@@ -111,7 +111,7 @@ build-ddsd:
 
 build-github-pages:
 	mkdir -p local
-	docker run -v `pwd`/local:/local --user `id --user` $$DDSDRUN_DOCKER_IMAGE cp -R /app/data /local/ddsddata-data
+	docker run -v `pwd`/local:/local --user `id --user` ${DOCKER_IMAGE}main cp -R /app/data /local/ddsddata-data
 	mv local/ddsddata-data/snapshots ./
 	mv local/ddsddata-data/indexes ./
 	mv local/ddsddata-data/fragments ./
