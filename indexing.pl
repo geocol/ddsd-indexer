@@ -628,7 +628,7 @@ sub main () {
           return 1;
         }
 
-        if ($site_started + $site_timeout < time and not $in_run) {
+        if ($site_started + $site_timeout < time and $in_run) {
           warn "indexing: Site time elapsed ($site_timeout)\n";
           return 1;
         }
