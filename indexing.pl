@@ -398,6 +398,7 @@ sub process_remote_index ($$$$$$$) {
     my $results;
     if (not defined $json) {
       # XXX if error (pull failed)
+      return undef;
     } elsif ($site_type eq 'ckan') {
       if (defined $json and ref $json eq 'HASH' and
           defined $json->{result} and ref $json->{result} eq 'ARRAY') {
@@ -534,8 +535,10 @@ sub process_remote_index ($$$$$$$) {
       };
     })->then (sub {
       return $states_sitepacks_file->write_byte_string (perl2json_bytes $states_sitepacks);
-    });
+    })->then (sub { 1 });
   })->then (sub {
+    return unless $_[0];
+    
     my $snapshot_index_path = $base_path->child
         ("snapshots/index.json");
     my $file = Promised::File->new_from_path ($snapshot_index_path);
