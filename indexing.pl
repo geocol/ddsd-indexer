@@ -521,7 +521,7 @@ sub process_remote_index ($$$$$$$) {
                 $key,
                 "local/tmp/$key.mirrorzip.zip",
                 '--json',
-              ) : {json => undef},
+              ) : do { $states_sets->{fragmented} = 1; {json => undef} },
             ]);
           });
         })->then (sub {
@@ -608,6 +608,7 @@ sub main () {
       $states_sets->{nonfree_large_set} = $_[0]->[6] || 'nonfree-l1';
       delete $states_sets->{changed_mirror_sets};
       delete $states_sets->{new_mirror_sets};
+      delete $states_sets->{fragmented};
 
       ## Redundant but necessary in case $max_size changes.
       for my $key (qw(
@@ -644,6 +645,10 @@ sub main () {
             warn "indexing: Max size ($max_size) exceeded ($key)\n";
             return 1;
           }
+        }
+        if ($states_sets->{fragmented}) {
+          warn "indexing: Fragments created\n";
+          return 1;
         }
 
         return 0;
