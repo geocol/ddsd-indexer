@@ -391,10 +391,14 @@ sub process_remote_index ($$$$$$$) {
   my $path = $base_path->child
       ('local/data', $esite_name, 'files/package_list.json');
   my $file = Promised::File->new_from_path ($path);
-  return $file->read_byte_string->then (sub { # XXX if error (pull failed)
+  return $file->is_file->then (sub {
+    return $_[0] ? $file->read_byte_string : 'null';
+  })->then (sub {
     my $json = json_bytes2perl $_[0];
     my $results;
-    if ($site_type eq 'ckan') {
+    if (not defined $json) {
+      # XXX if error (pull failed)
+    } elsif ($site_type eq 'ckan') {
       if (defined $json and ref $json eq 'HASH' and
           defined $json->{result} and ref $json->{result} eq 'ARRAY') {
         $results = $json->{result};
