@@ -467,6 +467,7 @@ sub process_remote_index ($$$$$$$) {
         
         my $epack_name = escape $pack_name;
         my $key = sha256_hex "$esite_name--$epack_name";
+        my $failed = 0;
         
         return ddsd (
           {wd => $base_path},
@@ -480,57 +481,65 @@ sub process_remote_index ($$$$$$$) {
             $key,
             '--all',
           );
+        })->catch (sub {
+          my $e = $_[0];
+          warn "indexing: ddsd fetch error: |$e|";
+          $failed = 1;
         })->then (sub {
-          return ddsd (
-            {wd => $base_path},
-            'freeze',
-            $key,
-          );
-        })->then (sub {
-          return Promise->all ([
-            ddsd (
-              {wd => $base_path, jsonl => 1},
-              'ls',
+          return if $failed;
+          
+          return Promise->resolve->then (sub {
+            return ddsd (
+              {wd => $base_path},
+              'freeze',
               $key,
-              '--jsonl',
-              '--with-source-meta',
-              '--with-item-meta',
-            ),
-            ddsd (
-              {wd => $base_path, json => 1},
-              'legal',
-              $key,
-              '--json',
-            ),
-          ])->then (sub {
-            my $r = $_[0];
-
-            my $size = 0;
-            my $count = 0;
-            for my $x (@{$r->[0]->{jsonl}}) {
-              if (defined $x->{rev} and defined $x->{rev}->{length}) {
-                $size += $x->{rev}->{length};
-                $count++ if $x->{type} eq 'file';
-              }
-            }
+            );
+          })->then (sub {
             return Promise->all ([
-              @$r,
-              ($size < 11*1024*1024*1024 || $count <= 1) ? ddsd (
-                {wd => $base_path, json => 1},
-                'export',
-                'mirrorzip',
+              ddsd (
+                {wd => $base_path, jsonl => 1},
+                'ls',
                 $key,
-                "local/tmp/$key.mirrorzip.zip",
+                '--jsonl',
+                '--with-source-meta',
+                '--with-item-meta',
+              ),
+              ddsd (
+                {wd => $base_path, json => 1},
+                'legal',
+                $key,
                 '--json',
-              ) : do { $states_sets->{fragmented} = 1; {json => undef} },
-            ]);
+              ),
+            ])->then (sub {
+              my $r = $_[0];
+
+              my $size = 0;
+              my $count = 0;
+              for my $x (@{$r->[0]->{jsonl}}) {
+                if (defined $x->{rev} and defined $x->{rev}->{length}) {
+                  $size += $x->{rev}->{length};
+                  $count++ if $x->{type} eq 'file';
+                }
+              }
+              return Promise->all ([
+                @$r,
+                ($size < 11*1024*1024*1024 || $count <= 1) ? ddsd (
+                  {wd => $base_path, json => 1},
+                  'export',
+                  'mirrorzip',
+                  $key,
+                  "local/tmp/$key.mirrorzip.zip",
+                  '--json',
+                ) : do { $states_sets->{fragmented} = 1; {json => undef} },
+              ]);
+            });
+          })->then (sub {
+            return add_to_local_index ($site_type, $site_name, $pack_name, $now,
+                                       $_[0]->[0]->{jsonl}, $_[0]->[1]->{json},
+                                       $_[0]->[2]->{json}, # or undef
+                                       "local/tmp/$key.mirrorzip.zip",
+                                       $states_sets);
           });
-        })->then (sub {
-          return add_to_local_index ($site_type, $site_name, $pack_name, $now,
-                                     $_[0]->[0]->{jsonl}, $_[0]->[1]->{json},
-                                     $_[0]->[2]->{json}, # or undef
-                                     "local/tmp/$key.mirrorzip.zip",
-                                     $states_sets);
         });
       };
     })->then (sub {
